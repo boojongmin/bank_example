@@ -31,20 +31,28 @@ fun main(args: Array<String>) {
         service.join(it, format("member_name_%d", it))
     }
 
+//    Thread.sleep(3000)
+
     println("2단계: 계좌 개설 로그")
     runner.run {
         service.createAccount(it)
     }
+
+//    Thread.sleep(3000)
 
     println("3단계: 입금 로그")
     runner.run {
         service.deposit(it)
     }
 
+//    Thread.sleep(3000)
+
     println("4단계: 출금 로그")
     runner.run {
         service.withdraw(it)
     }
+
+//    Thread.sleep(3000)
 
     println("5단계: 이체 로그")
     runner.run {
@@ -78,5 +86,7 @@ class ProducerRunner(val es: ExecutorService, val mainCountDownLatch: CountDownL
             }
             if(i % MAX_CONCURRENT_COUNT == 0) loopCountDownLatch.await()
         }
+
+        Thread.sleep(1000)
     }
 }

@@ -2,17 +2,16 @@ package boojongmin.bank
 
 import java.util.*
 
+abstract class Log(val key: Int)
 
-data class LogModel(val step: LogStep, val log: Log)
+data class MemberLog(val number: Int, val name: String, val createdAt: Date): Log(number)
 
-sealed class Log
+data class AccountLog (val memberNumber: Int, val accountNumber: String, val createdAt: Date): Log(memberNumber)
 
-data class AccountLog (val memberNumber: Int, val accountNumber: String, val createdAt: Date): Log()
+data class DepositLog(val memberNumber: Int, val accountNumber: String, val amount: Long, val createdAt: Date): Log(memberNumber)
 
-data class JoinLog(val number: Int, val name: String, val createdAt: Date): Log()
+data class WithdrawLog(val memberNumber: Int, val accountNumber: String, val amount: Long, val createdAt: Date): Log(memberNumber)
 
-data class TransactionLog(val memberNumber: Int, val accountNumber: String, val bank: BankEnum, val outAccountNumber: String?,
-                     val name: String?, val amount: Long, val createdAt: Date): Log() {
-    constructor(memberNumber: Int, accountNumber: String, amount: Long, createdAt: Date)
-            : this(memberNumber, accountNumber, BankEnum.BANK1, null, null, amount, createdAt)
-}
+data class TransferLog(val memberNumber: Int, val accountNumber: String, val bank: BankEnum, val outAccountNumber: String?,
+                       val name: String?, val amount: Long, val createdAt: Date): Log(memberNumber)
+

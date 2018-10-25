@@ -1,61 +1,58 @@
 package boojongmin.bank.producer
 
 import boojongmin.bank.*
+import boojongmin.bank.LogStep.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 class ProduceSerivce(var bank: Bank, private val producer: KafkaProducer<String, String>) {
-    companion object {
-        val TOPIC = "BANK"
-    }
-
     private val mapper = ObjectMapper()
 
-    private fun sendLog(log: LogModel) {
+    private fun sendLog(step: LogStep, log: Log) {
         val json = mapper.writeValueAsString(log)
-        this.producer.send(ProducerRecord(TOPIC, json))
+        this.producer.send(ProducerRecord(step.name, json))
         this.producer.flush()
     }
 
     fun join(customerNumber: Int, name: String) {
-        val (number, name1, _, createdAt) = bank.createMember(customerNumber, name)
-        val log = JoinLog(number, name1, createdAt)
-        sendLog(LogModel(LogStep.JOIN, log))
+        val (number, name1, createdAt, _) = bank.createMember(customerNumber, name)
+        val log = MemberLog(number, name1, createdAt)
+        sendLog(BANK_JOIN, log)
     }
 
     fun createAccount(number: Int) {
         val member = bank.memberMap[number]
         val account: Account = member!!.createAccount()
         val log = AccountLog(account.member.number, account.number, account.createdAt)
-        sendLog(LogModel(LogStep.CREATE_ACCOUNT, log))
+        sendLog(BANK_CREATE_ACCOUNT, log)
     }
 
     fun deposit(number: Int) {
         val (account, amount) = getAccountAndAmount(number)
         val tx = DepositTransaction(account, amount)
         account.transactions.add(tx)
-        val log = TransactionLog(tx.account.member.number, tx.account.number, tx.amount, tx.account.createdAt)
-        sendLog(LogModel(LogStep.DEPOSIT, log))
+        val log = DepositLog(tx.account.member.number, tx.account.number, tx.amount, tx.account.createdAt)
+        sendLog(BANK_DEPOSIT, log)
     }
 
     fun withdraw(number: Int) {
         val (account, amount) = getAccountAndAmount(number)
-        val tx = DepositTransaction(account, amount)
+        val tx = WithdrawTransaction(account, amount)
         account.transactions.add(tx)
-        val log = TransactionLog(tx.account.member.number, tx.account.number, tx.amount, tx.createdAt)
-        sendLog(LogModel(LogStep.WITHDRAW, log))
+        val log = WithdrawLog(tx.account.member.number, tx.account.number, tx.amount, tx.createdAt)
+        sendLog(BANK_WITHDRAW, log)
     }
 
     fun transfer(number: Int) {
         val (account, amount) = getAccountAndAmount(number)
-        var bank = BankEnum.BANK1
-        var outAccountNumber = "XXXX-XXXX-XXXX"
-        var name = "XXX"
+        val bank = BankEnum.BANK1
+        val outAccountNumber = "XXXX-XXXX-XXXX"
+        val name = "XXX"
         val tx = TransferTransaction(account, amount, bank, outAccountNumber, name)
         account.transactions.add(tx)
-        val log = TransactionLog(tx.account.member.number, tx.account.number, tx.bankEnum, tx.outAccountNumber, tx.name, tx.amount, tx.createdAt)
-        sendLog(LogModel(LogStep.TRANSFER, log))
+        val log = TransferLog(tx.account.member.number, tx.account.number, tx.bankEnum, tx.outAccountNumber, tx.name, tx.amount, tx.createdAt)
+        sendLog(BANK_TRANSFER, log)
     }
 
     fun getAccountAndAmount(number: Int): Pair<Account, Long> {
