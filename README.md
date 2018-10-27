@@ -40,4 +40,11 @@ curl localhost:4567/member/13
 kill $(pgrep -a java | grep consumer | awk '{print $1}')
 ```
 
+### line coverage 확인(jacoco maven plugin 사용)
+```
+mvn test
+firefox producer/target/site/jacoco/index.html 
+firefox consumer/target/site/jacoco/index.html 
+```
 
+bank <- member <- account <- transaction

@@ -6,8 +6,8 @@ import java.util.*
 
 object Factory {
     val properties = Properties()
-    init {
 
+    init {
         val clazzLoader = javaClass.classLoader
         properties.load(clazzLoader.getResourceAsStream("bank.properties"))
     }
@@ -19,4 +19,15 @@ object Factory {
     fun createProducer(): KafkaProducer<String, String> {
         return KafkaProducer(properties)
     }
+}
+
+data class BankConsumer(val consumer: KafkaConsumer<String, String>) {
+    init {
+    }
+
+    fun getPairs() = consumer.poll(500)
+            .filter { BankEnum.values().contains(BankEnum.valueOf(it.topic())) }
+            .map {
+                Pair(it.topic(), it.value())
+            }
 }

@@ -11,12 +11,6 @@ data class Bank(var memberMap: ConcurrentHashMap<Int, Member> = ConcurrentHashMa
         this.memberMap[number] = member
         return member
     }
-
-    fun createAccount(member: Member): Account {
-        val account = Account(member, UUID.randomUUID().toString())
-        member.accounts.add(account)
-        return account
-    }
 }
 
 data class Member(var number: Int, var name: String,
@@ -27,7 +21,6 @@ data class Member(var number: Int, var name: String,
         return account
     }
 }
-
 
 data class Account(
         @JsonIgnore
@@ -42,19 +35,19 @@ sealed class Transaction
 data class DepositTransaction(
         @JsonIgnore
         val account: Account,
-        var amount: Long,
+        var amount: Int,
         val createdAt: Date = Date()): Transaction()
 
 data class WithdrawTransaction(
         @JsonIgnore
         val account: Account,
-        var amount: Long,
+        var amount: Int,
         val createdAt: Date = Date()): Transaction()
 
 data class TransferTransaction(
         @JsonIgnore
         val account: Account,
-        val amount: Long,
+        val amount: Int,
         val bankEnum: BankEnum,
         var outAccountNumber: String,
         var name: String,

@@ -3,17 +3,14 @@ package boojongmin.bank.consumer
 import boojongmin.bank.*
 import boojongmin.bank.LogStep.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.consumer.Consumer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 
-class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: ExecutorService, val consumer: KafkaConsumer<String, String>, val mapper: ObjectMapper) {
+class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: ExecutorService, val consumer: Consumer<String, String>, val mapper: ObjectMapper) {
 
-    fun aynscConsume() {
+    fun consume() {
         consumer.subscribe(LogStep.values().map { it.name })
-
-        Thread {
         while (true) {
             val records = consumer.poll(500)
             for (record in records) {
@@ -21,27 +18,16 @@ class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: Executo
                 // ExecutorService MAX THREAD 16개.
                 es.submit {
                     try {
-                            consume(record)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        processData(record.topic(), record.value())
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
             }
-        }.start()
-    }
-
-    private fun consume(record: ConsumerRecord<String, String>) {
-        val topic = record.topic()
-        if (topic.startsWith(TOPIC_PFEFIX)) {
-            processData(topic, record.value())
-
-        } else {
-            throw IllegalStateException("get message on topic " + record.topic())
         }
     }
 
-    private fun processData(topic: String, json: String) {
+    protected fun processData(topic: String, json: String) {
         val step: LogStep = LogStep.valueOf(topic)
         when (step) {
             BANK_JOIN -> {
@@ -73,9 +59,9 @@ class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: Executo
     }
 
     private fun addCache(log: Log) {
-        when(log) {
+        when (log) {
             is MemberLog -> {
-                cache[log.key] =  Member(log.key, log.name, log.createdAt)
+                cache[log.key] = Member(log.key, log.name, log.createdAt)
             }
             else -> {
                 val member: Member? = cache[log.key]
@@ -83,7 +69,7 @@ class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: Executo
                     print("can't find member in cache: ${log.key}")
                     return
                 }
-                when(log) {
+                when (log) {
                     is AccountLog -> {
 //                        println(log::class.java)
                         member.accounts.add(Account(member, log.accountNumber))
@@ -92,7 +78,7 @@ class ConsumerSerivce(val cache: ConcurrentHashMap<Int, Member>, val es: Executo
                         try {
                             val account = member.accounts.first()
                             account.transactions.add(DepositTransaction(account, log.amount))
-                        }catch (e: java.lang.Exception) {
+                        } catch (e: java.lang.Exception) {
                             println(">>> " + member.name)
 //                            e.printStackTrace()
                         }
