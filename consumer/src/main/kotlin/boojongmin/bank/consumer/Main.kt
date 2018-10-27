@@ -24,13 +24,13 @@ fun main(args: Array<String>) {
 
     println("2단계: api 웹서버를 통해 조회")
 
-    get("/all") {
-        req, res -> mapper.writeValueAsString(cache)
+    get("/member") {
+        req, res -> mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cache)
     }
 
     get("/member/:number") {
         req, res ->
-            mapper.writeValueAsString(
+            mapper.writerWithDefaultPrettyPrinter().writeValueAsString(
                 cache[req.params(":number").toInt()]
             )
     }
