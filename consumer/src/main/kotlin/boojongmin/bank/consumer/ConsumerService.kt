@@ -8,12 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.apache.kafka.clients.consumer.Consumer
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors.newFixedThreadPool
 
-class ConsumerRunnerFactory {
-    fun process(consumer: Consumer<String, String>): Triple<Int, ConsumerRunner, ConcurrentHashMap<Int, Member>> {
-        val cache = ConcurrentHashMap<Int, Member>()
+class ConsumerRunnerFactory(val consumer: Consumer<String, String>, val cache: ConcurrentMap<Int, Member>) {
+    fun process(): Pair<Int, ConsumerRunner> {
         val partitions = consumer.partitionsFor(BANK_JOIN.name)
         val partitionsCount = partitions?.size ?: 1
         val MAX_THREAD_COUNT = if (partitionsCount >= 16) 16 else partitionsCount
@@ -21,7 +21,7 @@ class ConsumerRunnerFactory {
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         val service = ConsumerService(cache, mapper)
         val runner = createConsumerRunner(MAX_THREAD_COUNT, service)
-        return Triple(partitionsCount, runner, cache)
+        return Pair(partitionsCount, runner)
     }
 
     fun createConsumerRunner(maxThreadCount: Int, service: IConsumerService): ConsumerRunner {
@@ -65,12 +65,13 @@ interface IConsumerService {
     fun consume(topic: String, json: String)
 }
 
-class ConsumerService(val cache: ConcurrentHashMap<Int, Member>, val mapper: ObjectMapper) : IConsumerService {
+class ConsumerService(val cache: ConcurrentMap<Int, Member>, val mapper: ObjectMapper) : IConsumerService {
     override fun consume(topic: String, json: String) {
         try {
             process(topic, json)
         } catch (e: Exception) {
-            println("processData failed ${e.message}")
+            println("consume failed: ${e.message}")
+            e.stackTrace
         }
     }
 
@@ -116,22 +117,26 @@ class ConsumerService(val cache: ConcurrentHashMap<Int, Member>, val mapper: Obj
                 when (log) {
                     is CreateAccountLog -> {
                         member.accounts.add(Account(member, log.accountNumber))
+                        cache[log.key] = member
                     }
                     is DepositLog -> {
                         try {
                             val account = member.accounts.first()
                             account.transactions.add(DepositTransaction(account, log.amount))
+                            cache[log.key] = member
                         } catch (e: java.lang.Exception) {
-                            println(">>> " + member.name)
+                            println(e.message)
                         }
                     }
                     is WithdrawLog -> {
                         var account = member.accounts.first()
                         account.transactions.add(WithdrawTransaction(account, log.amount))
+                        cache[log.key] = member
                     }
                     is TransferLog -> {
                         var account = member.accounts.first()
                         account.transactions.add(TransferTransaction(account, log.amount, log.bank, log.outAccountNumber, log.name))
+                        cache[log.key] = member
                     }
                     else -> {
                         println("Invalid Log: ${log}")

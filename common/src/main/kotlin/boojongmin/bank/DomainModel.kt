@@ -1,6 +1,7 @@
 package boojongmin.bank
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import java.io.Serializable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -14,7 +15,12 @@ data class Bank(var memberMap: ConcurrentHashMap<Int, Member> = ConcurrentHashMa
 }
 
 data class Member(var number: Int, var name: String,
-                  val createdAt: Date = Date(), val accounts: MutableList<Account> = ArrayList()) {
+                  val createdAt: Date = Date(), val accounts: MutableList<Account> = ArrayList()): Serializable {
+
+    companion object {
+        private val serialVersionUID: Long = 1L;
+    }
+
     fun createAccount(): Account {
         val account = Account(this, UUID.randomUUID().toString())
         this.accounts.add(account)
@@ -28,9 +34,13 @@ data class Account(
         val number: String,
         val createdAt: Date = Date(),
         val transactions: MutableList<Transaction> = ArrayList()
-)
+): Serializable {
+    companion object {
+        private val serialVersionUID: Long = 2L;
+    }
+}
 
-sealed class Transaction
+sealed class Transaction: Serializable
 
 data class DepositTransaction(
         @JsonIgnore

@@ -179,14 +179,18 @@ class ConsumerRunnerFactoryTest {
     fun createConsumerRunner() {
         val maxThreadCount = 10
         val service: IConsumerService = mock()
-        val runner = ConsumerRunnerFactory().createConsumerRunner(maxThreadCount, service)
+        val consumer = createMockConsumer("topic")
+        val cache: ConcurrentHashMap<Int, Member> = mock()
+
+        val runner = ConsumerRunnerFactory(consumer, cache).createConsumerRunner(maxThreadCount, service)
         assertThat(runner).isNotNull
     }
 
     @Test
     fun process() {
         val consumer: MockConsumer<String, String> = createMockConsumer(BANK_JOIN.name)
-        val (partitionCount, runner, cache) = ConsumerRunnerFactory().process(consumer)
+        val cache: ConcurrentHashMap<Int, Member> = mock()
+        val (partitionCount, runner ) = ConsumerRunnerFactory(consumer, cache).process()
         assertThat(partitionCount).isEqualTo(1)
         assertThat(runner).isNotNull
         assertThat(cache).isNotNull
