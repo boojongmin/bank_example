@@ -1,20 +1,14 @@
 package boojongmin.bank.producer
 
 import boojongmin.bank.Bank
-import boojongmin.bank.BankEnum.*
+import boojongmin.bank.BankEnum.BANK1
 import boojongmin.bank.Factory
 import boojongmin.bank.Factory.createObjectMapper
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.junit.Ignore
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
-
-
-//const val MAX_CONCURRENT_COUNT = 1_000
-//const val MAX_COUNT = 50_000
 
 // 요구사항 2. b
 fun main(args: Array<String>) {
@@ -23,8 +17,8 @@ fun main(args: Array<String>) {
     val service = ProducerSerivce(Bank(), producer, mapper)
     val startTime = System.currentTimeMillis()
 
-    val MAX_TREAD_COUNT = 50
-    val MAX_RUN_COUNT = 50
+    val MAX_TREAD_COUNT = 1_000
+    val MAX_RUN_COUNT = 50_000
     val MAX_ALL_STEP_COUNT = MAX_RUN_COUNT * 5
     val SLEEP_TIME = 1000L
     val countDownLatch = CountDownLatch(MAX_ALL_STEP_COUNT)

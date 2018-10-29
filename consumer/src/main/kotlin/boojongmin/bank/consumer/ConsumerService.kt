@@ -16,7 +16,7 @@ class ConsumerRunnerFactory {
         val cache = ConcurrentHashMap<Int, Member>()
         val partitions = consumer.partitionsFor(BANK_JOIN.name)
         val partitionsCount = partitions?.size ?: 1
-        val MAX_THREAD_COUNT = if( partitionsCount >= 16 ) 16 else partitionsCount
+        val MAX_THREAD_COUNT = if (partitionsCount >= 16) 16 else partitionsCount
         val mapper = createObjectMapper()
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         val service = ConsumerService(cache, mapper)
@@ -24,7 +24,7 @@ class ConsumerRunnerFactory {
         return Triple(partitionsCount, runner, cache)
     }
 
-    fun createConsumerRunner(maxThreadCount: Int, service: IConsumerService): ConsumerRunner  {
+    fun createConsumerRunner(maxThreadCount: Int, service: IConsumerService): ConsumerRunner {
         val es: ExecutorService = newFixedThreadPool(maxThreadCount)
         return ConsumerRunner(es, service, maxThreadCount)
     }
@@ -32,14 +32,14 @@ class ConsumerRunnerFactory {
 
 class ConsumerRunner(val es: ExecutorService, val service: IConsumerService, val MAX_THREAD_COUNT: Int) {
     fun run() {
-        for(i in 1..MAX_THREAD_COUNT) {
+        for (i in 1..MAX_THREAD_COUNT) {
             val consumer = createConsumer()
             es.submit(ConsumerRunnable(consumer, service, false))
         }
     }
 }
 
-class ConsumerRunnable(val consumer: Consumer<String, String>, val service: IConsumerService, val isTest: Boolean ): Runnable {
+class ConsumerRunnable(val consumer: Consumer<String, String>, val service: IConsumerService, val isTest: Boolean) : Runnable {
     override fun run() {
         try {
             while (true) {
@@ -53,9 +53,9 @@ class ConsumerRunnable(val consumer: Consumer<String, String>, val service: ICon
                     println("commit failed ${e.message}")
                 }
 
-                if(isTest) break
+                if (isTest) break
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             consumer.close()
         }
     }
@@ -65,7 +65,7 @@ interface IConsumerService {
     fun consume(topic: String, json: String)
 }
 
-class ConsumerService(val cache: ConcurrentHashMap<Int, Member>, val mapper: ObjectMapper): IConsumerService {
+class ConsumerService(val cache: ConcurrentHashMap<Int, Member>, val mapper: ObjectMapper) : IConsumerService {
     override fun consume(topic: String, json: String) {
         try {
             process(topic, json)

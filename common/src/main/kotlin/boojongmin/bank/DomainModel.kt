@@ -36,13 +36,13 @@ data class DepositTransaction(
         @JsonIgnore
         val account: Account,
         var amount: Int,
-        val createdAt: Date = Date()): Transaction()
+        val createdAt: Date = Date()) : Transaction()
 
 data class WithdrawTransaction(
         @JsonIgnore
         val account: Account,
         var amount: Int,
-        val createdAt: Date = Date()): Transaction()
+        val createdAt: Date = Date()) : Transaction()
 
 data class TransferTransaction(
         @JsonIgnore
@@ -51,4 +51,4 @@ data class TransferTransaction(
         val bankEnum: BankEnum,
         var outAccountNumber: String,
         var name: String,
-        val createdAt: Date = Date()): Transaction()
+        val createdAt: Date = Date()) : Transaction()

@@ -4,10 +4,10 @@ import java.util.*
 
 abstract class Log(val key: Int)
 
-data class JoinLog(val number: Int, val name: String, val createdAt: Date): Log(number) {
+data class JoinLog(val number: Int, val name: String, val createdAt: Date) : Log(number) {
     override fun equals(other: Any?): Boolean {
         if (other is JoinLog) {
-            if(this.name == other.name && this.number == other.number) {
+            if (this.name == other.name && this.number == other.number) {
                 return true
             }
         }
@@ -15,10 +15,10 @@ data class JoinLog(val number: Int, val name: String, val createdAt: Date): Log(
     }
 }
 
-data class CreateAccountLog (val memberNumber: Int, val accountNumber: String, val createdAt: Date): Log(memberNumber) {
+data class CreateAccountLog(val memberNumber: Int, val accountNumber: String, val createdAt: Date) : Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
         if (other is CreateAccountLog) {
-            if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber) {
+            if (this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber) {
                 return true
             }
         }
@@ -26,10 +26,10 @@ data class CreateAccountLog (val memberNumber: Int, val accountNumber: String, v
     }
 }
 
-data class DepositLog(val memberNumber: Int, val accountNumber: String, val amount: Int, val createdAt: Date): Log(memberNumber) {
+data class DepositLog(val memberNumber: Int, val accountNumber: String, val amount: Int, val createdAt: Date) : Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
         if (other is DepositLog) {
-            if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber && this.amount == other.amount) {
+            if (this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber && this.amount == other.amount) {
                 return true
             }
         }
@@ -37,10 +37,10 @@ data class DepositLog(val memberNumber: Int, val accountNumber: String, val amou
     }
 }
 
-data class WithdrawLog(val memberNumber: Int, val accountNumber: String, val amount: Int, val createdAt: Date): Log(memberNumber) {
+data class WithdrawLog(val memberNumber: Int, val accountNumber: String, val amount: Int, val createdAt: Date) : Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
         if (other is WithdrawLog) {
-            if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber && this.amount == other.amount) {
+            if (this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber && this.amount == other.amount) {
                 return true
             }
         }
@@ -49,10 +49,10 @@ data class WithdrawLog(val memberNumber: Int, val accountNumber: String, val amo
 }
 
 data class TransferLog(val memberNumber: Int, val accountNumber: String, val bank: BankEnum, val outAccountNumber: String,
-                       val name: String, val amount: Int, val createdAt: Date): Log(memberNumber) {
+                       val name: String, val amount: Int, val createdAt: Date) : Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
         if (other is TransferLog) {
-            if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber
+            if (this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber
                     && this.amount == other.amount && this.bank == other.bank && this.outAccountNumber == other.outAccountNumber
                     && this.name == other.name && this.amount == other.amount) {
                 return true
