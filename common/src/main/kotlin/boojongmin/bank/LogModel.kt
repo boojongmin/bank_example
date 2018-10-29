@@ -4,9 +4,9 @@ import java.util.*
 
 abstract class Log(val key: Int)
 
-data class MemberLog(val number: Int, val name: String, val createdAt: Date): Log(number) {
+data class JoinLog(val number: Int, val name: String, val createdAt: Date): Log(number) {
     override fun equals(other: Any?): Boolean {
-        if (other is MemberLog) {
+        if (other is JoinLog) {
             if(this.name == other.name && this.number == other.number) {
                 return true
             }
@@ -15,9 +15,9 @@ data class MemberLog(val number: Int, val name: String, val createdAt: Date): Lo
     }
 }
 
-data class AccountLog (val memberNumber: Int, val accountNumber: String, val createdAt: Date): Log(memberNumber) {
+data class CreateAccountLog (val memberNumber: Int, val accountNumber: String, val createdAt: Date): Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
-        if (other is AccountLog) {
+        if (other is CreateAccountLog) {
             if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber) {
                 return true
             }
@@ -48,8 +48,8 @@ data class WithdrawLog(val memberNumber: Int, val accountNumber: String, val amo
     }
 }
 
-data class TransferLog(val memberNumber: Int, val accountNumber: String, val bank: BankEnum, val outAccountNumber: String?,
-                       val name: String?, val amount: Int, val createdAt: Date): Log(memberNumber) {
+data class TransferLog(val memberNumber: Int, val accountNumber: String, val bank: BankEnum, val outAccountNumber: String,
+                       val name: String, val amount: Int, val createdAt: Date): Log(memberNumber) {
     override fun equals(other: Any?): Boolean {
         if (other is TransferLog) {
             if(this.memberNumber == other.memberNumber && this.accountNumber == other.accountNumber

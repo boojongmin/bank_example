@@ -1,47 +1,31 @@
 package boojongmin.bank.producer
 
 import com.nhaarman.mockitokotlin2.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 
 class ProducerRunnerTest {
-    lateinit var es: ExecutorService
-    lateinit var runner: ProducerRunner
-    lateinit var countDownLatch: CountDownLatch
-
-    @BeforeEach
-    fun before() {
-        es = mock()
-        countDownLatch = CountDownLatch(MAX_ALL_STEP_COUNT)
-        runner = ProducerRunner(es, countDownLatch)
-    }
 
     @Test
-    fun run1() {
-        given(es.submit(any())).willReturn(any())
-        runner.run1 { _ ->
-            countDownLatch.countDown()
-        }
-        verify(es, times(MAX_COUNT)).submit(any())
-    }
+    fun runAllStep() {
+        val MAX_TREAD_COUNT = 1
+        val MAX_RUN_COUNT = 10
+        val MAX_ALL_STEP_COUNT = MAX_RUN_COUNT * 5
+        val SLEEP_TIME = 0L
+        val countDownLatch = CountDownLatch(MAX_ALL_STEP_COUNT)
+        val service:ProducerSerivce = mock()
+        val runner = ProducerRunner(service, countDownLatch, MAX_TREAD_COUNT, MAX_RUN_COUNT, SLEEP_TIME)
 
-    @Test
-    fun run2() {
-        given(es.submit(any())).willReturn(any())
-        runner.run2 { _, _ ->
-            countDownLatch.countDown()
-        }
-        verify(es, times(MAX_COUNT)).submit(any())
-    }
+        given(service.join(any(), any())).will { countDownLatch.countDown() }
+        given(service.createAccount(any())).will { countDownLatch.countDown() }
+        given(service.deposit(any(), any())).will { countDownLatch.countDown() }
+        given(service.withdraw(any(), any())).will { countDownLatch.countDown() }
+        given(service.transfer(any(), any(), any(), any(), any())).will { countDownLatch.countDown() }
 
-    @Test
-    fun run3() {
-        given(es.submit(any())).willReturn(any())
-        runner.run3 { _, _, _, _, _ ->
-            countDownLatch.countDown()
-        }
-        verify(es, times(MAX_COUNT)).submit(any())
+        runner.runAllSteps()
+        assertThat(countDownLatch.count).isEqualTo(0)
     }
 }

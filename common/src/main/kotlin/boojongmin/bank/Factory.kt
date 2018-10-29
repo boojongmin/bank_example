@@ -1,5 +1,8 @@
 package boojongmin.bank
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import java.util.*
@@ -13,21 +16,19 @@ object Factory {
     }
 
     fun createConsumer(): KafkaConsumer<String, String> {
-        return KafkaConsumer(properties)
+        val consumer = KafkaConsumer<String, String>(properties)
+        consumer.subscribe(LogStep.values().map { it.name })
+        return consumer
     }
 
     fun createProducer(): KafkaProducer<String, String> {
         return KafkaProducer(properties)
     }
-}
 
-data class BankConsumer(val consumer: KafkaConsumer<String, String>) {
-    init {
+    fun createObjectMapper(): ObjectMapper {
+        val mapper = ObjectMapper().registerModule(KotlinModule())
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        return mapper
     }
-
-    fun getPairs() = consumer.poll(500)
-            .filter { BankEnum.values().contains(BankEnum.valueOf(it.topic())) }
-            .map {
-                Pair(it.topic(), it.value())
-            }
 }
+

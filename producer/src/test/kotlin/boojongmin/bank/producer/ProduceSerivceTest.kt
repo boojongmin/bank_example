@@ -1,6 +1,7 @@
 package boojongmin.bank.producer
 
 import boojongmin.bank.*
+import boojongmin.bank.Factory.createObjectMapper
 import boojongmin.bank.LogStep.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -15,11 +16,11 @@ import java.util.concurrent.ExecutorService
 
 
 class ProduceSerivceTest {
-    val mapper = ObjectMapper().registerModule(KotlinModule())
+    val mapper = createObjectMapper()
 
     lateinit var es: ExecutorService
     lateinit var producer: MockProducer<String, String>
-    lateinit var service: ProduceSerivce
+    lateinit var service: ProducerSerivce
     lateinit var bank: Bank
     lateinit var member: Member
 
@@ -34,7 +35,7 @@ class ProduceSerivceTest {
 
         producer = MockProducer<String, String>(
                 true, StringSerializer(), StringSerializer())
-        service = ProduceSerivce(bank, producer, mapper)
+        service = ProducerSerivce(bank, producer, mapper)
     }
 
     @Test
@@ -46,10 +47,10 @@ class ProduceSerivceTest {
         val record = producer.history().first()
         val topic = record.topic()
         val json = record.value()
-        val log = mapper.deserialize<MemberLog>(json)
+        val log = mapper.deserialize<JoinLog>(json)
 
         assertThat(valueOf(topic)).isEqualTo(BANK_JOIN)
-        val expected = MemberLog(number, name, Date())
+        val expected = JoinLog(number, name, Date())
         assertThat(log).isEqualTo(expected)
         assertThat(bank.memberMap.size).isEqualTo(2)
     }
@@ -62,10 +63,10 @@ class ProduceSerivceTest {
         val record = producer.history().first()
         val topic = record.topic()
         val json = record.value()
-        val log = mapper.deserialize<AccountLog>(json)
+        val log = mapper.deserialize<CreateAccountLog>(json)
         val member = bank.memberMap[memberNumber]
 
-        val expect = AccountLog(memberNumber, log.accountNumber, Date())
+        val expect = CreateAccountLog(memberNumber, log.accountNumber, Date())
         assertThat(valueOf(topic)).isEqualTo(BANK_CREATE_ACCOUNT)
         assertThat(member!!.accounts.size).isEqualTo(2)
         assertThat(log).isEqualTo(expect)

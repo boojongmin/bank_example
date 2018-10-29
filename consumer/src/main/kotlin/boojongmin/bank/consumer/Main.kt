@@ -1,38 +1,29 @@
 package boojongmin.bank.consumer
 
 import boojongmin.bank.Factory
-import boojongmin.bank.Member
-import boojongmin.bank.BankConsumer
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import boojongmin.bank.Factory.createObjectMapper
 import spark.Spark.get
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-
-const val MAX_CONCURRENT_COUNT = 16
 
 fun main(args: Array<String>) {
-    val cache = ConcurrentHashMap<Int, Member>()
-    val es = Executors.newFixedThreadPool(MAX_CONCURRENT_COUNT)
-    val bankConsumer = BankConsumer(Factory.createConsumer())
-    val mapper = ObjectMapper().registerModule(KotlinModule())
-    val service = ConsumerSerivce(cache, es, bankConsumer, mapper)
 
+    val mapper = createObjectMapper()
+    val (partitioncount, runner, cache) = ConsumerRunnerFactory().process(Factory.createConsumer())
+    val threadCount = if (partitioncount >= 16) 16 else partitioncount
     println("consumer started!!")
-    println("1단계: 카프카로부터 전달받은 데이터 컨슘")
-    Thread { service.consume() }.start()
+    println("1단계: 카프카로부터 전달받은 데이터 컨슘(partitions: ${partitioncount},thread: ${threadCount})")
+    runner.run()
 
-    println("2단계: api 웹서버를 통해 조회")
+    println("2단계: API 서버 시작됨")
+    println("- 전체 member 조회: curl localhost:4567/member")
+    println("- 특정 member 조회: curl localhost:4567/member/1")
 
-    get("/member") {
-        req, res -> mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cache)
+    get("/member") { _, _ ->
+        mapper.writeValueAsString(cache)
     }
 
-    get("/member/:number") {
-        req, res ->
-            mapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+    get("/member/:number") { req, _ ->
+        mapper.writeValueAsString(
                 cache[req.params(":number").toInt()]
-            )
+        )
     }
-
 }

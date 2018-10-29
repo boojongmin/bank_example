@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 
-class ProduceSerivce(val bank: Bank, val producer: Producer<String, String>, val mapper: ObjectMapper) {
+class ProducerSerivce(val bank: Bank, val producer: Producer<String, String>, val mapper: ObjectMapper) {
     private fun sendLog(step: LogStep, log: Log) {
         val json = mapper.writeValueAsString(log)
         this.producer.send(ProducerRecord(step.name, json))
@@ -15,14 +15,14 @@ class ProduceSerivce(val bank: Bank, val producer: Producer<String, String>, val
 
     fun join(customerNumber: Int, name: String) {
         val (number, name1, createdAt, _) = bank.createMember(customerNumber, name)
-        val log = MemberLog(number, name1, createdAt)
+        val log = JoinLog(number, name1, createdAt)
         sendLog(BANK_JOIN, log)
     }
 
     fun createAccount(number: Int) {
         val member = bank.memberMap[number]
         val account: Account = member!!.createAccount()
-        val log = AccountLog(account.member.number, account.number, account.createdAt)
+        val log = CreateAccountLog(account.member.number, account.number, account.createdAt)
         sendLog(BANK_CREATE_ACCOUNT, log)
     }
 
