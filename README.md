@@ -73,11 +73,27 @@ firefox producer/target/site/jacoco/index.html
 firefox consumer/target/site/jacoco/index.html 
 ```
 
-##### 라인 커버리지
+### 라인 커버리지
 - producer
 ![producer](./image/producer_coverage.png)
 - consumer
 ![consumer](./image/consumer_coverage.png)
+
+### Kafka 관련 고려사항
+- Member.number를 partition key로 사용하여 Member와 연관된 엔티티들은 동일 파티션으로 발생되고 소비되도록 설계
+  - Producer 
+    ```kotlin
+    this.producer.send(ProducerRecord(step.name, log.key.toString(), json))
+    ``` 
+  - Consumer
+    ```kotlin
+    val consumer = KafkaConsumer<String, String>(properties)
+    val topicPartition = LogStep.values().map {TopicPartition(it.name, partition)}
+    consumer.assign(topicPartition)
+    ```
+- 문서상 KafkaConsumer는 thread safe하지 않으므로 Consumer 객체 최대 16개를 생성하여 poll
+- 브로커에서 해당 토픽의 Partition info를 가져와서 Consumer의 갯수를 동적으로 처리 
+    
 
 ### Concurrency
 - producer

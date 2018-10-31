@@ -9,8 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 class ProducerSerivce(val bank: Bank, val producer: Producer<String, String>, val mapper: ObjectMapper) {
     private fun sendLog(step: LogStep, log: Log) {
         val json = mapper.writeValueAsString(log)
-        this.producer.send(ProducerRecord(step.name, json))
-        this.producer.flush()
+        this.producer.send(ProducerRecord(step.name, log.key.toString(), json))
     }
 
     fun join(customerNumber: Int, name: String) {

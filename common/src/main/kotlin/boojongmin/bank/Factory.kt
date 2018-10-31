@@ -5,23 +5,23 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.common.TopicPartition
 import java.util.*
 
 object Factory {
     val properties = Properties()
+    val clazzLoader = javaClass.classLoader
 
-    init {
-        val clazzLoader = javaClass.classLoader
-        properties.load(clazzLoader.getResourceAsStream("bank.properties"))
-    }
-
-    fun createConsumer(): KafkaConsumer<String, String> {
+    fun createConsumer(partition: Int): KafkaConsumer<String, String> {
+        properties.load(clazzLoader.getResourceAsStream("consumer.properties"))
         val consumer = KafkaConsumer<String, String>(properties)
-        consumer.subscribe(LogStep.values().map { it.name })
+        val topicPartition = LogStep.values().map {TopicPartition(it.name, partition)}
+        consumer.assign(topicPartition)
         return consumer
     }
 
     fun createProducer(): KafkaProducer<String, String> {
+        properties.load(clazzLoader.getResourceAsStream("producer.properties"))
         return KafkaProducer(properties)
     }
 

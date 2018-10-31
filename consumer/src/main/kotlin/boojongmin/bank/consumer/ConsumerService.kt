@@ -7,21 +7,17 @@ import boojongmin.bank.LogStep.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.apache.kafka.clients.consumer.Consumer
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors.newFixedThreadPool
 
-class ConsumerRunnerFactory(val consumer: Consumer<String, String>, val cache: ConcurrentMap<Int, Member>) {
-    fun process(): Pair<Int, ConsumerRunner> {
-        val partitions = consumer.partitionsFor(BANK_JOIN.name)
-        val partitionsCount = partitions?.size ?: 1
-        val MAX_THREAD_COUNT = if (partitionsCount >= 16) 16 else partitionsCount
+class ConsumerRunnerFactory(val partitionCount: Int, val cache: ConcurrentMap<Int, Member>) {
+    fun process(): ConsumerRunner {
+        val MAX_THREAD_COUNT = if (partitionCount >= 16) 16 else partitionCount
         val mapper = createObjectMapper()
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         val service = ConsumerService(cache, mapper)
-        val runner = createConsumerRunner(MAX_THREAD_COUNT, service)
-        return Pair(partitionsCount, runner)
+        return createConsumerRunner(MAX_THREAD_COUNT, service)
     }
 
     fun createConsumerRunner(maxThreadCount: Int, service: IConsumerService): ConsumerRunner {
@@ -32,8 +28,8 @@ class ConsumerRunnerFactory(val consumer: Consumer<String, String>, val cache: C
 
 class ConsumerRunner(val es: ExecutorService, val service: IConsumerService, val MAX_THREAD_COUNT: Int) {
     fun run() {
-        for (i in 1..MAX_THREAD_COUNT) {
-            val consumer = createConsumer()
+        for (i in 0 until MAX_THREAD_COUNT) {
+            val consumer = createConsumer(i)
             es.submit(ConsumerRunnable(consumer, service, false))
         }
     }
@@ -70,7 +66,7 @@ class ConsumerService(val cache: ConcurrentMap<Int, Member>, val mapper: ObjectM
         try {
             process(topic, json)
         } catch (e: Exception) {
-            println("consume failed: ${e.message}")
+            println("Consume failed: ${e.message}")
             e.stackTrace
         }
     }
@@ -111,7 +107,7 @@ class ConsumerService(val cache: ConcurrentMap<Int, Member>, val mapper: ObjectM
             else -> {
                 val member: Member? = cache[log.key]
                 if (member == null) {
-                    print("can't find member in cache: ${log.key}")
+                    print("Can't find member in cache: ${log.key}")
                     return
                 }
                 when (log) {
@@ -129,12 +125,12 @@ class ConsumerService(val cache: ConcurrentMap<Int, Member>, val mapper: ObjectM
                         }
                     }
                     is WithdrawLog -> {
-                        var account = member.accounts.first()
+                        val account = member.accounts.first()
                         account.transactions.add(WithdrawTransaction(account, log.amount))
                         cache[log.key] = member
                     }
                     is TransferLog -> {
-                        var account = member.accounts.first()
+                        val account = member.accounts.first()
                         account.transactions.add(TransferTransaction(account, log.amount, log.bank, log.outAccountNumber, log.name))
                         cache[log.key] = member
                     }
